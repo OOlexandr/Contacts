@@ -14,3 +14,12 @@ class Contact(Base):
     email = Column(String(25))
     phone = Column(String(25))
     birthdate = Column(Date)
+    user_id = Column('user_id', ForeignKey('users.id', ondelete='CASCADE'), default=None)
+    user = relationship('User', backref='contacts')
+
+class User(Base):
+    __tablename__ = 'users'
+    id = Column(Integer, primary_key=True)
+    email = Column(String(250), nullable=False, unique=True)
+    password = Column(String(255), nullable=False)
+    refresh_token = Column(String(255), nullable=True)
