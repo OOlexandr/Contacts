@@ -8,6 +8,12 @@ async def get_user_by_email(email: str, db: Session) -> User:
     return db.query(User).filter(User.email == email).first()
 
 
+async def confirmed_email(email: str, db: Session) -> None:
+    user = await get_user_by_email(email, db)
+    user.confirmed = True
+    db.commit()
+
+
 async def create_user(body: UserModel, db: Session) -> User:
     new_user = User(email=body.email, password=body.password)
     db.add(new_user)
