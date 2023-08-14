@@ -22,5 +22,7 @@ class User(Base):
     id = Column(Integer, primary_key=True)
     confirmed = Column(Boolean, default=False)
     email = Column(String(250), nullable=False, unique=True)
+    username = Column(String(255), nullable=False)
     password = Column(String(255), nullable=False)
+    avatar = Column(String(255), nullable=True)
     refresh_token = Column(String(255), nullable=True)

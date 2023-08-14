@@ -16,12 +16,15 @@ class ContactResponse(ContactModel):
         orm_mode = True
 
 class UserModel(BaseModel):
+    username: str = Field(min_length=6, max_length=10)
     email: EmailStr
     password: str = Field(min_length=6, max_length=10)
 
 class UserDb(BaseModel):
     id: int
+    username: str = Field(min_length=6, max_length=10)
     email: str
+    avatar: str
 
     class Config:
         orm_mode = True
