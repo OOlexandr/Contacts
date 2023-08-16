@@ -18,12 +18,40 @@ class Auth:
     oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
     def verify_password(self, plain_password, hashed_password):
+        """
+        Verifies the password.
+
+        :param plain_password: The password to verify.
+        :type plain_password: str
+        :param hashed_password: The hashed password.
+        :type hashed_password: str
+        :return: True if the password is correct and False otherwise.
+        :rtype: bool
+        """
         return self.pwd_context.verify(plain_password, hashed_password)
 
     def get_password_hash(self, password: str):
+        """
+        Hashes the password.
+
+        :param password: The password to hash.
+        :type password: str
+        :return: The hashed password.
+        :rtype: str
+        """
         return self.pwd_context.hash(password)
 
     async def create_access_token(self, data: dict, expires_delta: Optional[float] = None):
+        """
+        Creates access token.
+
+        :param data: Data to create token from.
+        :type data: dict
+        :param expires_delta: Time in seconds until the token expires.
+        :type expires_delta: float | None
+        :return: The newly created access token.
+        :rtype: str
+        """
         to_encode = data.copy()
         if expires_delta:
             expire = datetime.utcnow() + timedelta(seconds=expires_delta)
@@ -34,6 +62,16 @@ class Auth:
         return encoded_access_token
     
     async def create_refresh_token(self, data: dict, expires_delta: Optional[float] = None):
+        """
+        Creates refresh token.
+
+        :param data: Data to create token from.
+        :type data: dict
+        :param expires_delta: Time in seconds until the token expires.
+        :type expires_delta: float | None
+        :return: The newly created refresh token.
+        :rtype: str
+        """
         to_encode = data.copy()
         if expires_delta:
             expire = datetime.utcnow() + timedelta(seconds=expires_delta)
@@ -44,6 +82,14 @@ class Auth:
         return encoded_refresh_token
 
     async def decode_refresh_token(self, refresh_token: str):
+        """
+        Decodes refresh token.
+
+        :param refresh_token: Refresh token.
+        :type refresh_token: str
+        :return: The user that owns the refresh token.
+        :rtype: User
+        """
         try:
             payload = jwt.decode(refresh_token, self.SECRET_KEY, algorithms=[self.ALGORITHM])
             if payload['scope'] == 'refresh_token':
@@ -54,6 +100,16 @@ class Auth:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Could not validate credentials')
 
     async def get_current_user(self, token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+        """
+        Gets current user.
+
+        :param token: Access token.
+        :type data: str
+        :param db: The database session.
+        :type db: Session
+        :return: The current user.
+        :rtype: User
+        """
         credentials_exception = HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Could not validate credentials",
@@ -77,6 +133,14 @@ class Auth:
         return user
     
     def create_email_token(self, data: dict):
+        """
+        Creates token for email verification.
+
+        :param data: Data to create token from.
+        :type data: dict
+        :return: The newly created token.
+        :rtype: str
+        """
         to_encode = data.copy()
         expire = datetime.utcnow() + timedelta(days=7)
         to_encode.update({"iat": datetime.utcnow(), "exp": expire})
@@ -84,6 +148,14 @@ class Auth:
         return token
     
     async def get_email_from_token(self, token: str):
+        """
+        Extracts email from email verification token.
+
+        :param token: Email verification token.
+        :type token: str
+        :return: The extracted email.
+        :rtype: str
+        """
         try:
             payload = jwt.decode(token, self.SECRET_KEY, algorithms=[self.ALGORITHM])
             email = payload["sub"]
