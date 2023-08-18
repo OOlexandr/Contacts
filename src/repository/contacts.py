@@ -53,40 +53,42 @@ async def find_contacts(query: str, user: User, db: Session) ->List[Contact]:
     :rtype: List[Contact]
     """
     return db.query(Contact).filter(Contact.user_id == user.id).filter(sa.or_(Contact.firstname==query, Contact.lastname==query,
-                                    Contact.email==query, Contact.phone==query))
+                                    Contact.email==query, Contact.phone==query)).all()
 
 
-def age_years_at(date, next_days: int = 0):
-    """
-    Finds number of full years passed since date after a number of days
-
-    :param date: The date.
-    :type date: date
-    :param next_days: The number of days.
-    :type next_days: int
-    :return: The number of full years.
-    :rtype: int
-    """
-    stmt = sa.func.age(
-        (date - sa.func.cast(timedelta(next_days), sa.Interval))
-        if next_days != 0
-        else date
-    )
-    stmt = sa.func.date_part("year", stmt)
-    return stmt
-
-def is_anniversary_soon(anniversary: date, n: int):
+def is_anniversary_soon(month, day, n: int):
     """
     Finds if the anniversary is within n days from current date
 
-    :param anniversary: The anniversary to check.
-    :type user: date
+    :param month: The month of the anniversary.
+    :type user: Extract
+    :param day: The day of the anniversary.
+    :type day: Extract
     :param n: The number of days.
     :type db: int
     :return: Is the anniversary is in the given time period.
     :rtype: bool
     """
-    return age_years_at(anniversary, n) > age_years_at(anniversary)
+    today = date.today()
+    days_in_month = {
+            1: 31,
+            2: 28,  # Ignoring leap years
+            3: 31,
+            4: 30,
+            5: 31,
+            6: 30,
+            7: 31,
+            8: 31,
+            9: 30,
+            10: 31,
+            11: 30,
+            12: 31}
+    this_month = (month == today.month)
+    next_month = (month == today.month+1) | (month==1 and today.month==12)
+    day_this_month = (day >= today.day) & (day <= today.day + n)
+    day_next_month = (today.day - days_in_month[today.month] + n) >= day
+    return (this_month & day_this_month) | (next_month & day_next_month)
+
 
 async def find_contacts_by_date(user: User, db: Session) ->List[Contact]:
     """
@@ -99,7 +101,9 @@ async def find_contacts_by_date(user: User, db: Session) ->List[Contact]:
     :return: A list of contacts.
     :rtype: List[Contact]
     """
-    return db.query(Contact).filter(Contact.user_id == user.id).filter(is_anniversary_soon(Contact.birthdate, 7))
+    return db.query(Contact).filter(Contact.user_id == user.id).\
+            filter(is_anniversary_soon(extract('month', Contact.birthdate),\
+                                       extract('day', Contact.birthdate), 7)).all()
 
 async def create_contact(body: ContactModel, user: User, db: Session) -> Contact:
     """

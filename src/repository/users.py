@@ -19,7 +19,7 @@ async def get_user_by_email(email: str, db: Session) -> User:
     return db.query(User).filter(User.email == email).first()
 
 
-async def confirmed_email(email: str, db: Session) -> None:
+async def confirmed_email(email: str, db: Session) -> User:
     """
     Confirmes the email.
 
@@ -27,10 +27,13 @@ async def confirmed_email(email: str, db: Session) -> None:
     :type email: str
     :param db: The database session.
     :type db: Session
+    :return: The user with confirmed email.
+    :rtype: User
     """
     user = await get_user_by_email(email, db)
     user.confirmed = True
     db.commit()
+    return user
 
 
 async def create_user(body: UserModel, db: Session) -> User:
@@ -57,7 +60,7 @@ async def create_user(body: UserModel, db: Session) -> User:
     return new_user
 
 
-async def update_token(user: User, token: str | None, db: Session) -> None:
+async def update_token(user: User, token: str | None, db: Session) -> User:
     """
     Updates user's refresh token.
 
@@ -67,9 +70,12 @@ async def update_token(user: User, token: str | None, db: Session) -> None:
     :type token: str | None
     :param db: The database session.
     :type db: Session
+    :return: The user with updated refresh token.
+    :rtype: User
     """
     user.refresh_token = token
     db.commit()
+    return user
 
 
 async def update_avatar(email, url: str, db: Session) -> User:
